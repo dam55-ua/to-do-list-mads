@@ -78,6 +78,27 @@ public class UsuarioServiceTest {
     }
 
     @Test
+    public void servicioRegistroPermiteUnSoloAdministrador() {
+        UsuarioData administrador = new UsuarioData();
+        administrador.setEmail("admin@ua");
+        administrador.setPassword("12345678");
+        administrador.setAdministrador(true);
+
+        UsuarioData registrado = usuarioService.registrar(administrador);
+
+        assertThat(registrado.isAdministrador()).isTrue();
+        assertThat(usuarioService.existeAdministrador()).isTrue();
+
+        UsuarioData segundoAdministrador = new UsuarioData();
+        segundoAdministrador.setEmail("otro-admin@ua");
+        segundoAdministrador.setPassword("12345678");
+        segundoAdministrador.setAdministrador(true);
+
+        Assertions.assertThrows(UsuarioServiceException.class,
+                () -> usuarioService.registrar(segundoAdministrador));
+    }
+
+    @Test
     public void servicioRegistroUsuarioExcepcionConNullPassword() {
         // WHEN, THEN
         // Si intentamos registrar un usuario con un password null,
