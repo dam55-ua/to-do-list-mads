@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -71,5 +73,16 @@ public class UsuarioService {
         else {
             return modelMapper.map(usuario, UsuarioData.class);
         }
+    }
+
+    // Devuelve el listado de todos los usuarios registrados en la aplicación.
+    // Usado por la página de listado de usuarios (/registrados)
+    @Transactional(readOnly = true)
+    public List<UsuarioData> findAll() {
+        List<UsuarioData> usuarios = new ArrayList<>();
+        for (Usuario usuario : usuarioRepository.findAll()) {
+            usuarios.add(modelMapper.map(usuario, UsuarioData.class));
+        }
+        return usuarios;
     }
 }
