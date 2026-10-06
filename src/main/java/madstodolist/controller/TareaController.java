@@ -34,6 +34,14 @@ public class TareaController {
             throw new UsuarioNoLogeadoException();
     }
 
+    // Añade al modelo el usuario logeado para que la barra de menú
+    // pueda mostrar su nombre y las opciones de sesión
+    private void addUsuarioLogeado(Model model) {
+        Long idUsuario = managerUserSession.usuarioLogeado();
+        model.addAttribute("usuarioLogeado",
+                idUsuario == null ? null : usuarioService.findById(idUsuario));
+    }
+
     @GetMapping("/usuarios/{id}/tareas/nueva")
     public String formNuevaTarea(@PathVariable(value="id") Long idUsuario,
                                  @ModelAttribute TareaData tareaData, Model model,
@@ -41,6 +49,7 @@ public class TareaController {
 
         comprobarUsuarioLogeado(idUsuario);
 
+        addUsuarioLogeado(model);
         UsuarioData usuario = usuarioService.findById(idUsuario);
         model.addAttribute("usuario", usuario);
         return "formNuevaTarea";
@@ -63,6 +72,7 @@ public class TareaController {
 
         comprobarUsuarioLogeado(idUsuario);
 
+        addUsuarioLogeado(model);
         UsuarioData usuario = usuarioService.findById(idUsuario);
         List<TareaData> tareas = tareaService.allTareasUsuario(idUsuario);
         model.addAttribute("usuario", usuario);
@@ -81,6 +91,7 @@ public class TareaController {
 
         comprobarUsuarioLogeado(tarea.getUsuarioId());
 
+        addUsuarioLogeado(model);
         model.addAttribute("tarea", tarea);
         tareaData.setTitulo(tarea.getTitulo());
         return "formEditarTarea";
