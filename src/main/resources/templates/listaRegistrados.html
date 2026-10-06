@@ -20,12 +20,14 @@
                 <tr>
                     <th>Id</th>
                     <th>Correo electrónico</th>
+                    <th>Descripción</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="usuario : ${usuarios}">
                     <td th:text="${usuario.id}"></td>
                     <td th:text="${usuario.email}"></td>
+                    <td><a th:href="@{/registrados/{id}(id=${usuario.id})}">Ver descripción</a></td>
                 </tr>
                 </tbody>
             </table>
