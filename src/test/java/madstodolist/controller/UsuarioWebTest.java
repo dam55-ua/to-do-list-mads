@@ -9,8 +9,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -58,6 +61,50 @@ public class UsuarioWebTest {
                         .param("password", "12345678"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/usuarios/1/tareas"));
+    }
+
+    @Test
+    public void servicioLoginAdministradorRedirigeAUsuariosRegistrados() throws Exception {
+        UsuarioData administrador = new UsuarioData();
+        administrador.setId(2L);
+        administrador.setAdministrador(true);
+        when(usuarioService.login("admin@ua", "12345678"))
+                .thenReturn(UsuarioService.LoginStatus.LOGIN_OK);
+        when(usuarioService.findByEmail("admin@ua")).thenReturn(administrador);
+
+        this.mockMvc.perform(post("/login")
+                        .param("eMail", "admin@ua")
+                        .param("password", "12345678"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/registrados"));
+    }
+
+    @Test
+    public void registroMuestraOEscondeCasillaDeAdministrador() throws Exception {
+        this.mockMvc.perform(get("/registro"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Dar de alta como administrador")));
+
+        when(usuarioService.existeAdministrador()).thenReturn(true);
+        this.mockMvc.perform(get("/registro"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        containsString("Dar de alta como administrador"))));
+    }
+
+    @Test
+    public void registroGuardaElAdministradorSeleccionado() throws Exception {
+        this.mockMvc.perform(post("/registro")
+                        .param("eMail", "admin@example.com")
+                        .param("password", "12345678")
+                        .param("administrador", "true"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+
+        org.mockito.ArgumentCaptor<UsuarioData> usuarioCaptor =
+                org.mockito.ArgumentCaptor.forClass(UsuarioData.class);
+        verify(usuarioService).registrar(usuarioCaptor.capture());
+        assertThat(usuarioCaptor.getValue().isAdministrador()).isTrue();
     }
 
     @Test

@@ -63,6 +63,7 @@ public class RegistradosWebTest {
                 .andExpect(content().string(allOf(
                         containsString("ana.garcia@ua.es"),
                         containsString("luis.perez@ua.es"),
+                        containsString("/registrados/" + usuarioId),
                         not(containsString("clave-secreta-ana")),
                         not(containsString("clave-secreta-luis"))
                 )));
@@ -85,5 +86,26 @@ public class RegistradosWebTest {
                         containsString("href=\"/usuarios/" + usuarioId + "/tareas\""),
                         containsString("Cerrar sesión")
                 )));
+    }
+
+    @Test
+    public void descripcionRegistradoMuestraDatosSinPassword() throws Exception {
+        Long usuarioId = addUsuariosBD();
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+
+        this.mockMvc.perform(get("/registrados/" + usuarioId))
+                .andExpect(status().isOk())
+                .andExpect(content().string(allOf(
+                        containsString(usuarioId.toString()),
+                        containsString("ana.garcia@ua.es"),
+                        containsString("No indicada"),
+                        not(containsString("clave-secreta-ana"))
+                )));
+    }
+
+    @Test
+    public void descripcionUsuarioInexistenteDevuelve404() throws Exception {
+        this.mockMvc.perform(get("/registrados/999"))
+                .andExpect(status().isNotFound());
     }
 }
