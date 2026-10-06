@@ -37,6 +37,7 @@ public class RegistradosWebTest {
         UsuarioData ana = new UsuarioData();
         ana.setEmail("ana.garcia@ua.es");
         ana.setPassword("clave-secreta-ana");
+        ana.setAdministrador(true);
         ana = usuarioService.registrar(ana);
 
         UsuarioData luis = new UsuarioData();
@@ -105,7 +106,38 @@ public class RegistradosWebTest {
 
     @Test
     public void descripcionUsuarioInexistenteDevuelve404() throws Exception {
+        Long administradorId = addUsuariosBD();
+        when(managerUserSession.usuarioLogeado()).thenReturn(administradorId);
+
         this.mockMvc.perform(get("/registrados/999"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void listadoRegistradosDeniegaAccesoSinSesion() throws Exception {
+        this.mockMvc.perform(get("/registrados"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void listadoRegistradosDeniegaAccesoAUsuarioNoAdministrador() throws Exception {
+        addUsuariosBD();
+        Long usuarioId = usuarioService.findByEmail("luis.perez@ua.es").getId();
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+
+        this.mockMvc.perform(get("/registrados"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string(containsString("No tiene permisos suficientes")));
+    }
+
+    @Test
+    public void descripcionRegistradoDeniegaAccesoAUsuarioNoAdministrador() throws Exception {
+        Long administradorId = addUsuariosBD();
+        Long usuarioId = usuarioService.findByEmail("luis.perez@ua.es").getId();
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+
+        this.mockMvc.perform(get("/registrados/" + administradorId))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string(containsString("No tiene permisos suficientes")));
     }
 }

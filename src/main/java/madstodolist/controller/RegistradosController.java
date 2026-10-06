@@ -1,6 +1,8 @@
 package madstodolist.controller;
 
 import madstodolist.authentication.ManagerUserSession;
+import madstodolist.controller.exception.UsuarioNoAutorizadoException;
+import madstodolist.controller.exception.UsuarioNoLogeadoException;
 import madstodolist.controller.exception.UsuarioNotFoundException;
 import madstodolist.dto.UsuarioData;
 import madstodolist.service.UsuarioService;
@@ -20,22 +22,35 @@ public class RegistradosController {
     @Autowired
     ManagerUserSession managerUserSession;
 
+    private UsuarioData comprobarAdministrador() {
+        Long idUsuario = managerUserSession.usuarioLogeado();
+        if (idUsuario == null) {
+            throw new UsuarioNoLogeadoException();
+        }
+
+        UsuarioData usuarioLogeado = usuarioService.findById(idUsuario);
+        if (usuarioLogeado == null || !usuarioLogeado.isAdministrador()) {
+            throw new UsuarioNoAutorizadoException();
+        }
+        return usuarioLogeado;
+    }
+
     @GetMapping("/registrados")
     public String listadoRegistrados(Model model) {
+        UsuarioData usuarioLogeado = comprobarAdministrador();
 
         // Listado de usuarios registrados (identificador y correo electrónico)
         model.addAttribute("usuarios", usuarioService.findAll());
 
-        // Usuario logeado, para la barra de menú
-        Long idUsuario = managerUserSession.usuarioLogeado();
-        model.addAttribute("usuarioLogeado",
-                idUsuario == null ? null : usuarioService.findById(idUsuario));
+        model.addAttribute("usuarioLogeado", usuarioLogeado);
 
         return "listaRegistrados";
     }
 
     @GetMapping("/registrados/{id}")
     public String descripcionRegistrado(@PathVariable("id") Long idUsuario, Model model) {
+        UsuarioData usuarioLogeado = comprobarAdministrador();
+
         UsuarioData usuario = usuarioService.findById(idUsuario);
         if (usuario == null) {
             throw new UsuarioNotFoundException();
@@ -43,9 +58,7 @@ public class RegistradosController {
 
         model.addAttribute("usuario", usuario);
 
-        Long idUsuarioLogeado = managerUserSession.usuarioLogeado();
-        model.addAttribute("usuarioLogeado", idUsuarioLogeado == null
-                ? null : usuarioService.findById(idUsuarioLogeado));
+        model.addAttribute("usuarioLogeado", usuarioLogeado);
 
         return "descripcionUsuario";
     }
