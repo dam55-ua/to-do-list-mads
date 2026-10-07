@@ -59,6 +59,21 @@ public class UsuarioServiceTest {
     }
 
     @Test
+    public void servicioBloquearYHabilitarUsuarioImpideYPermiteLogin() {
+        Long usuarioId = addUsuarioBD();
+
+        UsuarioData usuarioBloqueado = usuarioService.cambiarEstadoBloqueo(usuarioId, true);
+        assertThat(usuarioBloqueado.isBloqueado()).isTrue();
+        assertThat(usuarioService.login("user@ua", "123"))
+                .isEqualTo(UsuarioService.LoginStatus.USER_BLOCKED);
+
+        UsuarioData usuarioHabilitado = usuarioService.cambiarEstadoBloqueo(usuarioId, false);
+        assertThat(usuarioHabilitado.isBloqueado()).isFalse();
+        assertThat(usuarioService.login("user@ua", "123"))
+                .isEqualTo(UsuarioService.LoginStatus.LOGIN_OK);
+    }
+
+    @Test
     public void servicioRegistroUsuario() {
         // WHEN
         // Registramos un usuario con un e-mail no existente en la base de datos,

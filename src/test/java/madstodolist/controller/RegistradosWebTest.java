@@ -11,10 +11,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -128,6 +131,59 @@ public class RegistradosWebTest {
         this.mockMvc.perform(get("/registrados"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().string(containsString("No tiene permisos suficientes")));
+    }
+
+    @Test
+    public void administradorPuedeBloquearYHabilitarUsuarioDesdeListado() throws Exception {
+        Long administradorId = addUsuariosBD();
+        Long usuarioId = usuarioService.findByEmail("luis.perez@ua.es").getId();
+        when(managerUserSession.usuarioLogeado()).thenReturn(administradorId);
+
+        this.mockMvc.perform(get("/registrados"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(allOf(
+                        containsString("/registrados/" + usuarioId + "/bloquear"),
+                        containsString("Bloquear")
+                )));
+
+        this.mockMvc.perform(post("/registrados/" + usuarioId + "/bloquear"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/registrados"));
+        assertThat(usuarioService.findById(usuarioId).isBloqueado()).isTrue();
+
+        this.mockMvc.perform(post("/registrados/" + usuarioId + "/habilitar"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/registrados"));
+        assertThat(usuarioService.findById(usuarioId).isBloqueado()).isFalse();
+    }
+
+    @Test
+    public void administradorNoPuedeBloquearseASiMismo() throws Exception {
+        Long administradorId = addUsuariosBD();
+        when(managerUserSession.usuarioLogeado()).thenReturn(administradorId);
+
+        this.mockMvc.perform(get("/registrados"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(allOf(
+                        not(containsString("/registrados/" + administradorId + "/bloquear")),
+                        containsString("Administrador actual")
+                )));
+
+        this.mockMvc.perform(post("/registrados/" + administradorId + "/bloquear"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/registrados"));
+        assertThat(usuarioService.findById(administradorId).isBloqueado()).isFalse();
+    }
+
+    @Test
+    public void usuarioNoAdministradorNoPuedeBloquearUsuarios() throws Exception {
+        Long administradorId = addUsuariosBD();
+        Long usuarioId = usuarioService.findByEmail("luis.perez@ua.es").getId();
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+
+        this.mockMvc.perform(post("/registrados/" + administradorId + "/bloquear"))
+                .andExpect(status().isUnauthorized());
+        assertThat(usuarioService.findById(administradorId).isBloqueado()).isFalse();
     }
 
     @Test
