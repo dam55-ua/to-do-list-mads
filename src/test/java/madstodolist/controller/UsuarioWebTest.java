@@ -140,4 +140,16 @@ public class UsuarioWebTest {
                         .param("password","000"))
                 .andExpect(content().string(containsString("Contraseña incorrecta")));
     }
+
+    @Test
+    public void servicioLoginUsuarioBloqueadoMuestraMensaje() throws Exception {
+        when(usuarioService.login("bloqueado@ua", "12345678"))
+                .thenReturn(UsuarioService.LoginStatus.USER_BLOCKED);
+
+        this.mockMvc.perform(post("/login")
+                        .param("eMail", "bloqueado@ua")
+                        .param("password", "12345678"))
+                .andExpect(content().string(containsString(
+                        "Tu cuenta está bloqueada. Contacta con el administrador.")));
+    }
 }

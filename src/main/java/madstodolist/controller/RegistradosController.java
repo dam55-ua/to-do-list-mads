@@ -11,6 +11,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 // Controller de la página de usuarios registrados (/registrados)
 @Controller
@@ -61,5 +63,29 @@ public class RegistradosController {
         model.addAttribute("usuarioLogeado", usuarioLogeado);
 
         return "descripcionUsuario";
+    }
+
+    @PostMapping("/registrados/{id}/bloquear")
+    public String bloquearUsuario(@PathVariable("id") Long idUsuario, RedirectAttributes flash) {
+        UsuarioData administrador = comprobarAdministrador();
+        if (administrador.getId().equals(idUsuario)) {
+            flash.addFlashAttribute("error", "No puedes bloquear tu propia cuenta de administrador");
+            return "redirect:/registrados";
+        }
+        if (usuarioService.cambiarEstadoBloqueo(idUsuario, true) == null) {
+            throw new UsuarioNotFoundException();
+        }
+        flash.addFlashAttribute("mensaje", "Usuario bloqueado correctamente");
+        return "redirect:/registrados";
+    }
+
+    @PostMapping("/registrados/{id}/habilitar")
+    public String habilitarUsuario(@PathVariable("id") Long idUsuario, RedirectAttributes flash) {
+        comprobarAdministrador();
+        if (usuarioService.cambiarEstadoBloqueo(idUsuario, false) == null) {
+            throw new UsuarioNotFoundException();
+        }
+        flash.addFlashAttribute("mensaje", "Usuario habilitado correctamente");
+        return "redirect:/registrados";
     }
 }

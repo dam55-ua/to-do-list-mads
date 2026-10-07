@@ -21,6 +21,8 @@
                     <th>Id</th>
                     <th>Correo electrónico</th>
                     <th>Descripción</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -28,9 +30,33 @@
                     <td th:text="${usuario.id}"></td>
                     <td th:text="${usuario.email}"></td>
                     <td><a th:href="@{/registrados/{id}(id=${usuario.id})}">Ver descripción</a></td>
+                    <td th:text="${usuario.bloqueado ? 'Bloqueado' : 'Habilitado'}"></td>
+                    <td>
+                        <form th:if="${!usuario.bloqueado && usuario.id != usuarioLogeado.id}" method="post"
+                              th:action="@{/registrados/{id}/bloquear(id=${usuario.id})}">
+                            <button class="btn btn-danger btn-sm" type="submit">Bloquear</button>
+                        </form>
+                        <form th:if="${usuario.bloqueado}" method="post"
+                              th:action="@{/registrados/{id}/habilitar(id=${usuario.id})}">
+                            <button class="btn btn-success btn-sm" type="submit">Habilitar</button>
+                        </form>
+                        <span th:if="${!usuario.bloqueado && usuario.id == usuarioLogeado.id}">
+                            Administrador actual
+                        </span>
+                    </td>
                 </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+    <div class="row mt-2" th:if="${mensaje != null}">
+        <div class="col">
+            <div class="alert alert-success" role="alert" th:text="${mensaje}"></div>
+        </div>
+    </div>
+    <div class="row mt-2" th:if="${error != null}">
+        <div class="col">
+            <div class="alert alert-danger" role="alert" th:text="${error}"></div>
         </div>
     </div>
 </div>
