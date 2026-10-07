@@ -130,7 +130,7 @@ public class RegistradosWebTest {
 
         this.mockMvc.perform(get("/registrados"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().string(containsString("No tiene permisos suficientes")));
+                .andExpect(status().reason("No tiene permisos suficientes"));
     }
 
     @Test
@@ -194,6 +194,6 @@ public class RegistradosWebTest {
 
         this.mockMvc.perform(get("/registrados/" + administradorId))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().string(containsString("No tiene permisos suficientes")));
+                .andExpect(status().reason("No tiene permisos suficientes"));
     }
 }
