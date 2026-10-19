@@ -77,7 +77,7 @@ public class BarraMenuWebTest {
                         containsString("/usuarios/" + usuarioId + "/tareas"),
                         containsString("Tareas"),
                         containsString("Daniel"),
-                        containsString("Cerrar sesión Daniel")
+                        containsString("Hola mundo")
                 )));
     }
 
