@@ -12,6 +12,8 @@ jobs:
     steps:
       # Hacemos un checkout del código del repositorio 
       - uses: actions/checkout@v2
+      - name: Make mvnw executable
+        run: chmod +x mvnw
       # Y lanzamos los tests
       - name: Launch tests with Maven
         run:  ./mvnw test
