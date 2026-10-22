@@ -5,7 +5,7 @@ on: push
 jobs:
   container-job:
     runs-on: ubuntu-latest
-    container: openjdk:8-jdk-alpine
+    container: eclipse-temurin:17-jdk-alpine
     services:
       # Etiqueta usada para acceder al contenedor del servicio
       postgres:
