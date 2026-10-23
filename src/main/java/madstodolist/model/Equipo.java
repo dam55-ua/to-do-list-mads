@@ -3,6 +3,7 @@ package madstodolist.model;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Objects;
 
 
 @Entity
@@ -37,5 +38,19 @@ public class Equipo implements Serializable {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Equipo equipo = (Equipo) o;
+        if (id != null && equipo.id != null)
+            return Objects.equals(id, equipo.id);
+        return Objects.equals(nombre, equipo.nombre);
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(nombre);
     }
 }
