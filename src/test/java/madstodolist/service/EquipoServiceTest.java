@@ -133,4 +133,24 @@ public class EquipoServiceTest {
         List<UsuarioData> usuarios = equipoService.usuariosEquipo(equipo.getId());
         assertThat(usuarios).hasSize(0);
     }
+
+    @Test
+    public void modificarNombreEquipo(){
+        // GIVEN
+        EquipoData equipo = equipoService.crearEquipo("Proyecto 1");
+        //WHEN
+        equipo=equipoService.modificarNombreEquipo(equipo.getId(),"Proyecto 2");
+        //THEN
+        assertThat(equipo.getNombre()).isEqualTo("Proyecto 2");
+    }
+    @Test
+    public void eliminarEquipo(){
+        //GIVEN
+        EquipoData equipo = equipoService.crearEquipo("Proyecto 1");
+        //WHEN
+        equipoService.eliminarEquipo(equipo.getId());
+        //THEN
+        assertThatThrownBy(() -> equipoService.recuperarEquipo(equipo.getId()))
+                .isInstanceOf(EquipoServiceException.class);
+    }
 }

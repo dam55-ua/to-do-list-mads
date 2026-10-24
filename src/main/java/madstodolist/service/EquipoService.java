@@ -111,4 +111,27 @@ public class EquipoService {
         }
         equipo.removeUsuario(usuario);
     }
+
+    @Transactional
+    public EquipoData modificarNombreEquipo(Long equipoId, String nuevoNombre){
+        Equipo equipo = equipoRepository.findById(equipoId).orElse(null);
+        if (equipo == null) {
+            throw new EquipoServiceException("ERROR");
+        }
+        equipo.setNombre(nuevoNombre);
+        equipo = equipoRepository.save(equipo);
+        return modelMapper.map(equipo, EquipoData.class);
+    }
+
+    @Transactional
+    public void eliminarEquipo(Long id){
+        Equipo equipo = equipoRepository.findById(id).orElse(null);
+        if (equipo == null) {
+            throw new EquipoServiceException("ERROR");
+        }
+        for (Usuario usuario : equipo.getUsuarios()){
+            equipo.removeUsuario(usuario);
+        }
+        equipoRepository.delete(equipo);
+    }
 }
