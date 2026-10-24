@@ -41,7 +41,7 @@ public class EquipoService {
         Equipo equipo = equipoRepository.findById(id).orElse(null);
 
         if (equipo == null){
-            return null;
+            throw new EquipoServiceException("ERROR");
         }
         return modelMapper.map(equipo, EquipoData.class);
     }
@@ -50,7 +50,7 @@ public class EquipoService {
     public List<EquipoData> findAllOrdenadoPorNombre() {
         List<Equipo> equipos = equipoRepository.findAll();
         if (equipos.isEmpty()) {
-            return null;
+            throw new EquipoServiceException("ERROR");
         }
         // Ordenamos la lista por nombre de Equipo
         List<EquipoData> equiposData = equipos.stream()
@@ -63,13 +63,22 @@ public class EquipoService {
     @Transactional
     public void añadirUsuarioAEquipo(Long id, Long id1) {
         Equipo equipo = equipoRepository.findById(id).orElse(null);
+        if (equipo == null){
+            throw new EquipoServiceException("ERROR");
+        }
         Usuario usuario = usuarioRepository.findById(id1).orElse(null);
+        if (usuario == null){
+            throw new EquipoServiceException("ERROR");
+        }
         equipo.addUsuario(usuario);
     }
 
     @Transactional(readOnly = true)
     public List<UsuarioData> usuariosEquipo(Long id) {
         Equipo equipo = equipoRepository.findById(id).orElse(null);
+        if(equipo == null){
+            throw new EquipoServiceException("ERROR");
+        }
         // Hacemos uso de Java Stream API para mapear la lista de entidades a DTOs.
         return equipo.getUsuarios().stream()
                 .map(usuario -> modelMapper.map(usuario, UsuarioData.class))
@@ -80,7 +89,7 @@ public class EquipoService {
     public List<EquipoData> equiposUsuario (Long id) {
         Usuario usuario = usuarioRepository.findById(id).orElse(null);
         if (usuario == null) {
-            return null;
+            throw new EquipoServiceException("ERROR");
         }
         // Hacemos uso de Java Stream API para mapear la lista de entidades a DTOs.
         List<EquipoData> equipos = usuario.getEquipos().stream()
