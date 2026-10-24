@@ -98,4 +98,17 @@ public class EquipoService {
         // Ordenamos la lista por id de tarea
         return equipos;
     }
+
+    @Transactional
+    public void eliminarUsuarioDeEquipo(Long id, Long id1) {
+        Equipo equipo = equipoRepository.findById(id).orElse(null);
+        if (equipo == null){
+            throw new EquipoServiceException("ERROR");
+        }
+        Usuario usuario = usuarioRepository.findById(id1).orElse(null);
+        if (usuario == null){
+            throw new EquipoServiceException("ERROR");
+        }
+        equipo.removeUsuario(usuario);
+    }
 }
