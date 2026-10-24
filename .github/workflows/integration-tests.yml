@@ -25,6 +25,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Make mvnw executable
+        run: chmod +x mvnw
       - name: Launch tests with Maven
         run:  ./mvnw test -D spring.profiles.active=postgres
         env:
