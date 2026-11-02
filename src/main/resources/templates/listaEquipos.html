@@ -12,7 +12,27 @@
             <h2>Equipos</h2>
         </div>
     </div>
+    <div class="row mt-3">
+        <div class="col">
+            <form method="post" th:action="@{/equipos}" class="form-inline">
+                <input type="text" name="nombre" class="form-control mr-2"
+                       placeholder="Nombre del equipo" required>
+                <button type="submit" class="btn btn-primary">Crear equipo</button>
+            </form>
+        </div>
+    </div>
 
+    <div class="row mt-2" th:if="${mensaje != null}">
+        <div class="col">
+            <div class="alert alert-success" th:text="${mensaje}"></div>
+        </div>
+    </div>
+
+    <div class="row mt-2" th:if="${error != null}">
+        <div class="col">
+            <div class="alert alert-danger" th:text="${error}"></div>
+        </div>
+    </div>
     <div class="row mt-3">
         <div class="col">
             <table class="table table-striped" th:if="${!#lists.isEmpty(equipos)}">
