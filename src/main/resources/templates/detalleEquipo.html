@@ -42,6 +42,32 @@
 
     <div class="row mt-3">
         <div class="col">
+            <form th:if="${!pertenece}" method="post"
+                  th:action="@{/equipos/{id}/unirse(id=${equipo.id})}">
+                <button type="submit" class="btn btn-primary">Unirme al equipo</button>
+            </form>
+
+            <form th:if="${pertenece}" method="post"
+                  th:action="@{/equipos/{id}/salir(id=${equipo.id})}">
+                <button type="submit" class="btn btn-danger">Salir del equipo</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mt-2" th:if="${mensaje != null}">
+        <div class="col">
+            <div class="alert alert-success" th:text="${mensaje}"></div>
+        </div>
+    </div>
+
+    <div class="row mt-2" th:if="${error != null}">
+        <div class="col">
+            <div class="alert alert-danger" th:text="${error}"></div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col">
             <a class="btn btn-link" th:href="@{/equipos}">Volver al listado</a>
         </div>
     </div>
