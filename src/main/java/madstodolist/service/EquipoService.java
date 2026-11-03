@@ -129,8 +129,9 @@ public class EquipoService {
         if (equipo == null) {
             throw new EquipoServiceException("ERROR");
         }
-        for (Usuario usuario : equipo.getUsuarios()){
-            equipo.removeUsuario(usuario);
+
+        while (!equipo.getUsuarios().isEmpty()) {
+            equipo.removeUsuario(equipo.getUsuarios().iterator().next());
         }
         equipoRepository.delete(equipo);
     }
