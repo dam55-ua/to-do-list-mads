@@ -19,6 +19,7 @@ import java.util.List;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import madstodolist.controller.exception.UsuarioNoAutorizadoException;
 
 @Controller
 public class EquipoController {
@@ -42,6 +43,19 @@ public class EquipoController {
             throw new UsuarioNoLogeadoException();
         }
         return usuario;
+    }
+
+    private UsuarioData comprobarAdministrador() {
+        Long idUsuario = managerUserSession.usuarioLogeado();
+        if (idUsuario == null) {
+            throw new UsuarioNoLogeadoException();
+        }
+
+        UsuarioData usuarioLogeado = usuarioService.findById(idUsuario);
+        if (usuarioLogeado == null || !usuarioLogeado.isAdministrador()) {
+            throw new UsuarioNoAutorizadoException();
+        }
+        return usuarioLogeado;
     }
 
 
@@ -141,6 +155,45 @@ public class EquipoController {
         }
 
         return "redirect:/equipos/" + idEquipo;
+    }
+
+
+    // POST "/equipos/{id}/renombrar"
+    @PostMapping("/equipos/{id}/renombrar")
+    public String renombrarEquipo(@PathVariable("id") Long idEquipo,
+                                  @RequestParam("nombre") String nombre,
+                                  RedirectAttributes flash) {
+        comprobarAdministrador();
+
+        if (nombre == null || nombre.trim().isEmpty()) {
+            flash.addFlashAttribute("error", "El nombre del equipo no puede estar vacío");
+            return "redirect:/equipos/" + idEquipo;
+        }
+
+        try {
+            equipoService.modificarNombreEquipo(idEquipo, nombre.trim());
+            flash.addFlashAttribute("mensaje", "Equipo renombrado correctamente");
+        } catch (EquipoServiceException e) {
+            throw new EquipoNotFoundException();
+        }
+
+        return "redirect:/equipos/" + idEquipo;
+    }
+
+    // POST "/equipos/{id}/eliminar"
+    @PostMapping("/equipos/{id}/eliminar")
+    public String eliminarEquipo(@PathVariable("id") Long idEquipo,
+                                 RedirectAttributes flash) {
+        comprobarAdministrador();
+
+        try {
+            equipoService.eliminarEquipo(idEquipo);
+            flash.addFlashAttribute("mensaje", "Equipo eliminado correctamente");
+        } catch (EquipoServiceException e) {
+            throw new EquipoNotFoundException();
+        }
+
+        return "redirect:/equipos";
     }
 
 }

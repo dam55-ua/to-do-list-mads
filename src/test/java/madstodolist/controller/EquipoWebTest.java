@@ -25,6 +25,9 @@ import madstodolist.repository.EquipoRepository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import madstodolist.service.EquipoServiceException;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -49,6 +52,14 @@ public class EquipoWebTest {
         UsuarioData usuario = new UsuarioData();
         usuario.setEmail("usuario@ua.es");
         usuario.setPassword("123");
+        return usuarioService.registrar(usuario).getId();
+    }
+
+    private Long addAdministradorBD() {
+        UsuarioData usuario = new UsuarioData();
+        usuario.setEmail("admin@ua.es");
+        usuario.setPassword("123");
+        usuario.setAdministrador(true);
         return usuarioService.registrar(usuario).getId();
     }
 
@@ -256,6 +267,123 @@ public class EquipoWebTest {
         this.mockMvc.perform(get("/equipos/" + equipo.getId()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Salir del equipo")));
+    }
+
+    //Test de POST "/equipos/id/renombrar"
+    @Test
+    public void administradorRenombraEquipo() throws Exception {
+        Long adminId = addAdministradorBD();
+        EquipoData equipo = equipoService.crearEquipo("Proyecto AAA");
+        when(managerUserSession.usuarioLogeado()).thenReturn(adminId);
+
+        this.mockMvc.perform(post("/equipos/" + equipo.getId() + "/renombrar")
+                        .param("nombre", "Proyecto BBB"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/equipos/" + equipo.getId()));
+
+        assertThat(equipoService.recuperarEquipo(equipo.getId()).getNombre())
+                .isEqualTo("Proyecto BBB");
+    }
+
+    @Test
+    public void usuarioNoAdministradorNoPuedeRenombrar() throws Exception {
+        Long usuarioId = addUsuarioBD();
+        EquipoData equipo = equipoService.crearEquipo("Proyecto AAA");
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+
+        this.mockMvc.perform(post("/equipos/" + equipo.getId() + "/renombrar")
+                        .param("nombre", "Proyecto BBB"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(status().reason("No tiene permisos suficientes"));
+
+        // El nombre no ha cambiado
+        assertThat(equipoService.recuperarEquipo(equipo.getId()).getNombre())
+                .isEqualTo("Proyecto AAA");
+    }
+
+    @Test
+    public void renombrarEquipoSinSesionDevuelve401() throws Exception {
+        EquipoData equipo = equipoService.crearEquipo("Proyecto AAA");
+
+        this.mockMvc.perform(post("/equipos/" + equipo.getId() + "/renombrar")
+                        .param("nombre", "Proyecto BBB"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void renombrarEquipoInexistenteDevuelve404() throws Exception {
+        Long adminId = addAdministradorBD();
+        when(managerUserSession.usuarioLogeado()).thenReturn(adminId);
+
+        this.mockMvc.perform(post("/equipos/999/renombrar").param("nombre", "Proyecto BBB"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void administradorEliminaEquipo() throws Exception {
+        Long adminId = addAdministradorBD();
+        EquipoData equipo = equipoService.crearEquipo("Proyecto AAA");
+        when(managerUserSession.usuarioLogeado()).thenReturn(adminId);
+
+        this.mockMvc.perform(post("/equipos/" + equipo.getId() + "/eliminar"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/equipos"));
+
+        assertThatThrownBy(() -> equipoService.recuperarEquipo(equipo.getId()))
+                .isInstanceOf(EquipoServiceException.class);
+    }
+
+    @Test
+    public void usuarioNoAdministradorNoPuedeEliminar() throws Exception {
+        Long usuarioId = addUsuarioBD();
+        EquipoData equipo = equipoService.crearEquipo("Proyecto AAA");
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+
+        this.mockMvc.perform(post("/equipos/" + equipo.getId() + "/eliminar"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(status().reason("No tiene permisos suficientes"));
+
+        // El equipo sigue existiendo
+        assertThat(equipoService.recuperarEquipo(equipo.getId())).isNotNull();
+    }
+
+    @Test
+    public void eliminarEquipoSinSesionDevuelve401() throws Exception {
+        EquipoData equipo = equipoService.crearEquipo("Proyecto AAA");
+
+        this.mockMvc.perform(post("/equipos/" + equipo.getId() + "/eliminar"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void eliminarEquipoInexistenteDevuelve404() throws Exception {
+        Long adminId = addAdministradorBD();
+        when(managerUserSession.usuarioLogeado()).thenReturn(adminId);
+
+        this.mockMvc.perform(post("/equipos/999/eliminar"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void detalleEquipoMuestraPanelAdminSiEsAdministrador() throws Exception {
+        Long adminId = addAdministradorBD();
+        EquipoData equipo = equipoService.crearEquipo("Proyecto AAA");
+        when(managerUserSession.usuarioLogeado()).thenReturn(adminId);
+
+        this.mockMvc.perform(get("/equipos/" + equipo.getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Administración del equipo")));
+    }
+
+    @Test
+    public void detalleEquipoNoMuestraPanelAdminSiNoEsAdministrador() throws Exception {
+        Long usuarioId = addUsuarioBD();
+        EquipoData equipo = equipoService.crearEquipo("Proyecto AAA");
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+
+        this.mockMvc.perform(get("/equipos/" + equipo.getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("Administración del equipo"))));
     }
 
 

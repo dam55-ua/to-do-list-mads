@@ -153,4 +153,30 @@ public class EquipoServiceTest {
         assertThatThrownBy(() -> equipoService.recuperarEquipo(equipo.getId()))
                 .isInstanceOf(EquipoServiceException.class);
     }
+
+    @Test
+    public void eliminarEquipoConVariosMiembros() {
+        UsuarioData usuario1 = new UsuarioData();
+        usuario1.setEmail("user1@ua");
+        usuario1.setPassword("123");
+        usuario1 = usuarioService.registrar(usuario1);
+
+        UsuarioData usuario2 = new UsuarioData();
+        usuario2.setEmail("user2@ua");
+        usuario2.setPassword("123");
+        usuario2 = usuarioService.registrar(usuario2);
+
+        EquipoData equipo = equipoService.crearEquipo("Proyecto 1");
+        equipoService.añadirUsuarioAEquipo(equipo.getId(), usuario1.getId());
+        equipoService.añadirUsuarioAEquipo(equipo.getId(), usuario2.getId());
+
+        equipoService.eliminarEquipo(equipo.getId());
+
+        assertThatThrownBy(() -> equipoService.recuperarEquipo(equipo.getId()))
+                .isInstanceOf(EquipoServiceException.class);
+        assertThat(usuarioService.findById(usuario1.getId())).isNotNull();
+        assertThat(usuarioService.findById(usuario2.getId())).isNotNull();
+        assertThat(equipoService.equiposUsuario(usuario1.getId())).isEmpty();
+        assertThat(equipoService.equiposUsuario(usuario2.getId())).isEmpty();
+    }
 }
